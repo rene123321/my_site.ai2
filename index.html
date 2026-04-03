@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>BloomTree — your goal garden</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(125deg, #e3f0ea 0%, #d1e2d8 100%);
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, sans-serif;
+      padding: 1.8rem 1.2rem;
+      color: #1e2f2a;
+    }
+
+    /* main card */
+    .app-card {
+      max-width: 1300px;
+      margin: 0 auto;
+      background: rgba(255, 255, 248, 0.96);
+      backdrop-filter: blur(2px);
+      border-radius: 2.5rem;
+      box-shadow: 0 25px 45px -12px rgba(0, 32, 16, 0.35);
+      overflow: hidden;
+      transition: all 0.2s;
+    }
+
+    /* inner layout */
+    .flex-layout {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* header */
+    .hero {
+      background: #fefaf0;
+      padding: 1.6rem 2rem 0.8rem 2rem;
+      text-align: center;
+      border-bottom: 1px solid #e0ecd9;
+    }
+
+    .hero h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #226e4c, #3da06b);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      letter-spacing: -0.3px;
+    }
+
+    .hero p {
+      color: #558872;
+      margin-top: 0.3rem;
+      font-size: 0.9rem;
+    }
+
+    /* two columns: left = questions, right = tree area (on desktop) */
+    .two-columns {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.8rem;
+      padding: 2rem;
+    }
+
+    .questions-panel {
+      flex: 1.2;
+      min-width: 260px;
+    }
+
+    .tree-panel {
+      flex: 1.8;
+      min-width: 280px;
+    }
+
+    /* question blocks */
+    .q-card {
+      background: #ffffffec;
+      border-radius: 1.6rem;
+      padding: 1.4rem;
+      margin-bottom: 1.4rem;
+      box-shadow: 0 5px 12px rgba(0, 0, 0, 0.03);
+      border: 1px solid #e2efdf;
+      transition: all 0.2s;
+    }
+
+    .q-card label {
+      font-weight: 700;
+      font-size: 1.05rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.7rem;
+      color: #1e5b42;
+    }
+
+    textarea {
+      width: 100%;
+      padding: 0.9rem 1rem;
+      font-size: 0.95rem;
+      border-radius: 1.2rem;
+      border: 1.5px solid #deecdf;
+      background: #fefef7;
+      font-family: inherit;
+      resize: vertical;
+      transition: 0.2s;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: #3ba06b;
+      box-shadow: 0 0 0 3px rgba(59, 160, 107, 0.2);
+    }
+
+    /* style row (3 buttons) */
+    .style-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin: 1rem 0 1.2rem 0;
+    }
+
+    .style-chip {
+      flex: 1;
+      background: #edf5ef;
+      border: none;
+      padding: 0.7rem 0.5rem;
+      border-radius: 60px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: 0.2s;
+      color: #2b5c44;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .style-chip.active {
+      background: #2b8c5e;
+      color: white;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+    }
+
+    /* big green button */
+    .generate-btn {
+      background: #1f7b53;
+      border: none;
+      width: 100%;
+      padding: 1rem;
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: white;
+      border-radius: 60px;
+      cursor: pointer;
+      transition: 0.15s;
+      margin: 0.5rem 0 0.2rem 0;
+      letter-spacing: 0.8px;
+      box-shadow: 0 5px 0 #115a3c;
+    }
+
+    .generate-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 #115a3c;
+    }
+
+    /* tree container */
+    .tree-container {
+      background: #fcf9ef;
+      border-radius: 2rem;
+      padding: 0.8rem;
+      box-shadow: inset 0 0 0 1px #fffae8, 0 12px 22px rgba(0,0,0,0.08);
+      min-height: 520px;
+      display: flex;
+      flex-direction: column;
+    }
+
+.tree-header {
+      text-align: center;
+      font-weight: 500;
+      color: #4d7864;
+      margin-bottom: 0.5rem;
+      font-size: 0.85rem;
+    }
+
+    .tree-svg-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex: 1;
+    }
+
+    svg {
+      max-width: 100%;
+      height: auto;
+      border-radius: 1.8rem;
+      transition: all 0.2s;
+    }
+
+    /* modal modern */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(20, 35, 28, 0.7);
+      backdrop-filter: blur(8px);
+      align-items: center;
+      justify-content: center;
+      z-index: 3000;
+    }
+
+    .modal-window {
+      background: #fffffffa;
+      max-width: 520px;
+      width: 90%;
+      border-radius: 2rem;
+      padding: 2rem 1.8rem;
+      box-shadow: 0 30px 45px rgba(0,0,0,0.25);
+      animation: slideUp 0.2s ease;
+    }
+
+    .modal-window h3 {
+      font-size: 1.7rem;
+      color: #186e48;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 1rem;
+    }
+
+    .task-list {
+      margin: 1.5rem 0;
+      padding-left: 1.2rem;
+    }
+
+    .task-list li {
+      margin: 0.8rem 0;
+      font-size: 0.98rem;
+      line-height: 1.4;
+    }
+
+    .close-modal-btn {
+      background: #e2f0e8;
+      border: none;
+      padding: 0.6rem 1.5rem;
+      border-radius: 3rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px);}
+      to { opacity: 1; transform: translateY(0);}
+    }
+
+    footer {
+      text-align: center;
+      font-size: 0.7rem;
+      padding: 1rem 2rem 1.5rem;
+      color: #719982;
+      border-top: 1px solid #deecdf;
+    }
+
+    @media (max-width: 780px) {
+      body { padding: 1rem; }
+      .two-columns { padding: 1rem; gap: 1rem; }
+      .hero h1 { font-size: 1.5rem; }
+      .style-chip { font-size: 0.8rem; }
+    }
+
+    button {
+      font-family: inherit;
+    }
+  </style>
+</head>
+<body>
+<div class="app-card">
+  <div class="hero">
+    <h1>🌿 your goal tree · bloom</h1>
+    <p>what you want · what stops you · what you already own → then generate your tree</p>
+  </div>
+
+  <div class="two-columns">
+    <!-- LEFT: questionnaire + controls -->
+    <div class="questions-panel">
+      <div class="q-card">
+        <label>🎯 1. What do you truly want to achieve?</label>
+        <textarea id="goalField" rows="2" placeholder="e.g., become a product designer, start my own business, learn guitar..."></textarea>
+      </div>
+      <div class="q-card">
+        <label>🧱 2. What’s holding you back right now?</label>
+        <textarea id="blockerField" rows="2" placeholder="e.g., self-doubt, lack of routine, financial limits, no mentor..."></textarea>
+      </div>
+      <div class="q-card">
+        <label>✨ 3. What do you already have? (skills, environment, time)</label>
+        <textarea id="resourcesField" rows="2" placeholder="e.g., 1 hour every morning, basic Figma skills, supportive partner..."></textarea>
+      </div>
+
+      <div class="style-row">
+        <button class="style-chip" data-style="easy">🍃 EASY · soft mode</button>
+        <button class="style-chip" data-style="working" id="defaultActive">⚡ WORKING · steady</button>
+        <button class="style-chip" data-style="no-compromise">🔥 NO COMPROMISE · hardcore</button>
+      </div>
+
+      <button class="generate-btn" id="mainGenerateBtn">🌱 GENERATE MY TREE 🌱</button>
+      <div style="font-size: 0.7rem; text-align: center; margin-top: 0.6rem; color: #65967f;">✨ one bright green leaf = your personal quests</div>
+    </div>
+
+    <!-- RIGHT: tree visualization -->
+    <div class="tree-panel">
+      <div class="tree-container">
+        <div class="tree-header">🍃 minimal tree · white leaves & one radiant leaf</div>
+<div class="tree-svg-wrapper" id="treeRoot">
+          <!-- dynamic SVG will be injected here -->
+          <svg width="520" height="460" viewBox="0 0 520 460" xmlns="http://www.w3.org/2000/svg">
+            <text x="260" y="220" fill="#adc2b5" font-size="15" text-anchor="middle">🌿 press "GENERATE MY TREE" 🌿</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+  <footer>💡 click the vivid green leaf → unlock a custom action plan based on your answers & style</footer>
+</div>
+
+<div id="taskModal" class="modal-overlay">
+  <div class="modal-window">
+    <h3>📋 YOUR GREEN LEAF · TASKS</h3>
+    <ul class="task-list" id="dynamicTaskList">
+      <li>✨ tasks will be generated for you</li>
+    </ul>
+    <button class="close-modal-btn" id="closeModalButton">✔️ I'm on it</button>
+  </div>
+</div>
+
+<script>
+  // --------------------------------------------------------------
+  // 1. INTELLIGENT TASK GENERATOR (personalized + style)
+  // --------------------------------------------------------------
+  function generateSmartTasks(goal, blocker, resources, style) {
+    const rawGoal = goal.trim() || "move forward with purpose";
+    const rawBlocker = blocker.trim() || "uncertainty & limited structure";
+    const rawResources = resources.trim() || "willingness to grow & some time";
+
+    let baseTasks = [];
+
+    if (style === "easy") {
+      baseTasks = [
+        🌱 Micro‑step: define ONE tiny action for “${rawGoal.substring(0, 48)}” (5 minutes max).,
+        📘 Learn one small tactic to handle “${rawBlocker.substring(0, 48)}” — watch a 7min video.,
+        ⏳ Use your strength: ${rawResources.substring(0, 50)} → schedule 20 minutes today.,
+        📝 Evening journal: note 1 thing that felt like progress.,
+        🌸 Environment upgrade: remove 1 distraction from your desk.
+      ];
+    } 
+    else if (style === "working") {
+      baseTasks = [
+        🎯 Set a weekly SMART goal related to “${rawGoal.substring(0, 50)}”.,
+        ⚙️ Break the barrier “${rawBlocker.substring(0, 50)}” into 3 possible solutions.,
+        📅 Use ${rawResources.substring(0, 52)} to create a 5-day plan (40 min deep work each day).,
+        🤝 Find one accountability partner or share your goal publicly.,
+        📊 Daily reflection: “What advanced my goal today?”
+      ];
+    } 
+    else { // no compromise
+      baseTasks = [
+        🔥 Set a strict deadline (max 18 days) for “${rawGoal.substring(0, 50)}”.,
+        💥 Destroy the root cause of “${rawBlocker.substring(0, 50)}” with a zero-excuses map.,
+        🚀 Double your resource usage: invest ${rawResources.substring(0, 54)} for 2+ hours daily.,
+        🏆 Execute 3 non-negotiable actions every single day.,
+        📈 Public progress tracker + daily review with a peer group.,
+        🎯 Complete the most uncomfortable task related to your goal within 48h.
+      ];
+    }
+
+    // adaptive extras based on keywords
+    if (rawResources.toLowerCase().includes("hour")  rawResources.toLowerCase().includes("time")  rawResources.toLowerCase().includes("evening")) {
+      baseTasks.push(⏰ Guard your time window: block calendar as “sacred goal time”.);
+    }
+    if (rawBlocker.toLowerCase().includes("fear")  rawBlocker.toLowerCase().includes("anxiety")  rawBlocker.toLowerCase().includes("scared")) {
+      baseTasks.push(💪 Courage step: do one small thing that scares you a little (related to your aim).);
+    }
+    if (rawGoal.toLowerCase().includes("project")  rawGoal.toLowerCase().includes("start")  rawGoal.toLowerCase().includes("business")) {
+      baseTasks.push(🚀 Define the absolute minimal version of your project and sketch it.);
+    }
+    if (rawResources.toLowerCase().includes("friend")  rawResources.toLowerCase().includes("family")  rawResources.toLowerCase().includes("support")) {
+      baseTasks.push(👥 Leverage your environment: ask for a 15-min feedback session this week.);
+    }
+// remove duplicate tasks (simple uniqueness)
+    const unique = [];
+    const setCheck = new Set();
+    for (let t of baseTasks) {
+      const key = t.slice(0, 64);
+      if (!setCheck.has(key)) {
+        setCheck.add(key);
+        unique.push(t);
+      }
+    }
+    return unique.slice(0, 8);
+  }
+
+  // --------------------------------------------------------------
+  // 2. DRAW MINIMAL TREE (white leaves + ONE bright green leaf)
+  // --------------------------------------------------------------
+  function renderMinimalTree(onGreenLeafCallback) {
+    const container = document.getElementById('treeRoot');
+    if (!container) return;
+
+    const width = 540, height = 470;
+    // leaf positions (natural, organic)
+    const leafPositions = [
+      { cx: 270, cy: 80 },  // top
+      { cx: 235, cy: 108 }, { cx: 305, cy: 108 },
+      { cx: 200, cy: 142 }, { cx: 340, cy: 142 },
+      { cx: 225, cy: 170 }, { cx: 315, cy: 170 },
+      { cx: 185, cy: 200 }, { cx: 355, cy: 200 },
+      { cx: 248, cy: 210 }, { cx: 295, cy: 210 },
+      { cx: 210, cy: 238 }, { cx: 330, cy: 238 },
+      { cx: 270, cy: 255 }, { cx: 240, cy: 275 }, { cx: 300, cy: 275 },
+      { cx: 270, cy: 298 } // extra leaf
+    ];
+    
+    const leafCount = leafPositions.length;
+    const brightIndex = Math.floor(Math.random() * leafCount);   // random green leaf each generation
+    
+    let svgHtml = <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" style="background:#fcfaf2; border-radius: 28px;">;
+    
+    // trunk (minimal)
+    svgHtml += <path d="M265 330 L255 465 L295 465 L285 330 Z" fill="#bcae85" stroke="#a28f66" stroke-width="1.2"/>;
+    svgHtml += <path d="M265 330 L255 465 L295 465 L285 330 Z" fill="#cfbe95" opacity="0.7"/>;
+    
+    // branches (soft)
+    svgHtml += <path d="M268 338 L215 270" stroke="#b6a277" stroke-width="5.5" fill="none" stroke-linecap="round"/>;
+    svgHtml += <path d="M285 335 L355 265" stroke="#b6a277" stroke-width="5.5" fill="none" stroke-linecap="round"/>;
+    svgHtml += <path d="M274 315 L245 248" stroke="#c2b082" stroke-width="4.5" fill="none"/>;
+    svgHtml += <path d="M278 315 L315 245" stroke="#c2b082" stroke-width="4.5" fill="none"/>;
+    svgHtml += <path d="M270 280 L270 170" stroke="#b8a77d" stroke-width="4" fill="none"/>;
+    
+    // faint foliage background (just airy)
+    svgHtml += <ellipse cx="270" cy="200" rx="110" ry="100" fill="#e3e6d5" opacity="0.2" />;
+    
+    // draw leaves: white / offwhite except one bright green
+    for (let i = 0; i < leafPositions.length; i++) {
+      const pos = leafPositions[i];
+      const isBright = (i === brightIndex);
+      const leafFill = isBright ? "#3ce37c" : "#FDFFF7";
+      const leafStroke = isBright ? "#1e874c" : "#cddbc3";
+      const glowAttr = isBright ? 'filter="url(#gentleGlow)"' : '';
+      
+      svgHtml += <circle cx="${pos.cx}" cy="${pos.cy}" r="11.5" fill="${leafFill}" stroke="${leafStroke}" stroke-width="1.4" 
+        class="tree-leaf-garden" data-bright="${isBright}" data-idx="${i}" style="cursor:pointer; transition:0.05s;" ${glowAttr} />;
+      // leaf center detail
+      svgHtml += <circle cx="${pos.cx}" cy="${pos.cy}" r="3.8" fill="${isBright ? '#c3ffa4' : '#e4e9db'}" opacity="0.8" />;
+    }
+    
+    svgHtml += <defs><filter id="gentleGlow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur in="SourceAlpha" stdDeviation="2.8"/><feMerge><feMergeNode in="offsetblur" /><feMergeNode in="SourceGraphic" /></feMerge></filter></defs>;
+    svgHtml += <text x="270" y="440" text-anchor="middle" fill="#95b3a0" font-size="11" font-weight="400">✦ vivid green leaf = your custom action plan ✦</text>;
+    svgHtml += </svg>;
+    
+    container.innerHTML = svgHtml;
+    
+    // attach click listeners to leaves
+const freshResources = document.getElementById('resourcesField').value;
+        lastTasks = generateSmartTasks(freshGoal, freshBlocker, freshResources, currentStyle);
+      }
+      showModalWithTasks(lastTasks);
+    };
+    
+    renderMinimalTree(brightLeafHandler);
+  }
+  
+  const generateBtn = document.getElementById('mainGenerateBtn');
+  generateBtn.addEventListener('click', onGenerateFull);
+  
+  // --------------------------------------------------------------
+  // 5. FIRST LOAD: initial demo tree with default tasks (friendly)
+  // --------------------------------------------------------------
+  (function initDemo() {
+    const demoGoal = "explore possibilities & grow";
+    const demoBlocker = "getting started inertia";
+    const demoResources = "motivation + small daily windows";
+    lastTasks = generateSmartTasks(demoGoal, demoBlocker, demoResources, "working");
+    const demoCallback = () => {
+      showModalWithTasks(lastTasks);
+    };
+    renderMinimalTree(demoCallback);
+    
+    // set placeholder attributes for better UX
+    document.getElementById('goalField').placeholder = "e.g., become a UX designer, run 5k, start a podcast...";
+    document.getElementById('blockerField').placeholder = "e.g., fear of failure, no clear system, distractions...";
+    document.getElementById('resourcesField').placeholder = "e.g., 1h free at night, HTML/CSS, creative mind...";
+  })();
+</script>
+</body>
+</html>
